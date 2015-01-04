@@ -38,7 +38,7 @@ def updated_ratings files
 	numFiles = files.length
 	files.each do |file|
 		next if file.empty?
-		yield
+		yield if block_given?
 	  	json = movie_detail file
 	  	movies << movie_from(file, json) unless json.nil?
 	end
