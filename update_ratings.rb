@@ -1,7 +1,7 @@
-require 'to_name'
 require "net/http"
 require "uri"
 require 'json'
+require 'to_name'
 require 'table_print'
 require 'progress_bar'
 
