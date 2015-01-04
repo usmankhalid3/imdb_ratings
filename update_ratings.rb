@@ -4,8 +4,7 @@ require 'json'
 require 'to_name'
 require 'table_print'
 require 'progress_bar'
-
-stash_path = "/Users/usman/Desktop/Personal/Downloaded/*"
+require 'YAML'
 
 def get_files_at path
 	files = Dir.glob(path)
@@ -25,10 +24,12 @@ def movie_detail file
 end
 
 def movie_from file, json
-	rating = json["imdbRating"]
-  	plot = json["Plot"]
-  	year = json["Year"]
-  	{:name => camelize(file), :rating => rating, :year => year, :plot => plot}
+  	{
+  		:name => camelize(file), 
+  		:rating => json["imdbRating"], 
+  		:year => json["Year"], 
+  		:plot => json["Plot"]
+  	}
 end
 
 def updated_ratings files
@@ -45,12 +46,40 @@ def updated_ratings files
 	movies.sort {|a,b| b[:rating] <=> a[:rating] }
 end
 
-puts "\n"
+def clear_screen
+	system "clear" or system "cls"
+end
 
-files = get_files_at(stash_path)
-bar = ProgressBar.new(files.length, :bar, :counter, :eta)
-movies = updated_ratings(files) { bar.increment! }
+def save movies, path
+	f = File.open("#{path}/ratings", 'w')
+	f.write(YAML.dump(movies))
+	rescue SystemCallError
+		puts "Data could not be saved!"
+  		return nil
+end
 
-puts "\n\n"
-tp movies, :name, :rating, :year, :plot => {:width => 100}
+def open_from path
+	f = File.read("#{path}/ratings")
+	YAML.load(f)
+	rescue SystemCallError
+  		return nil
+end
+
+def show ratings
+	clear_screen
+	tp ratings, :name, :rating, :year, :plot => {:width => 100} unless ratings.nil?
+end
+
+def main path
+	old_ratings = open_from path
+	show old_ratings
+	files = get_files_at("#{path}/*")
+	bar = ProgressBar.new(files.length, :bar, :counter, :eta)
+	new_ratings = updated_ratings(files) { bar.increment! }
+	show new_ratings
+	save new_ratings, path
+end
+
+src = "/Users/usman/Desktop/Personal/Downloaded"
+main src
 
